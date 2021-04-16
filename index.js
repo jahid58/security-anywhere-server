@@ -24,10 +24,11 @@ client.connect(err => {
     const serviceCollection = client.db("securityServices").collection("services");
     const adminCollection = client.db("securityServices").collection("admins");
     const hiredServiceCollection = client.db("securityServices").collection("hiredServices");
+    const reviewCollection = client.db("securityServices").collection("reviews");
 
     app.post('/addAdmin', (req, res) => {
         const admin = req.body;
-        adminCollection.insertOne({admin})
+        adminCollection.insertOne(admin)
             .then(result => {
                 res.send(result.insertedCount > 0)
             })
@@ -35,7 +36,7 @@ client.connect(err => {
     });
     app.post('/addHiredService', (req, res) => {
         const hiredService = req.body;
-        hiredServiceCollection.insertOne({hiredService})
+        hiredServiceCollection.insertOne(hiredService)
             .then(result => {
                 res.send(result.insertedCount > 0)
             })
@@ -48,40 +49,48 @@ client.connect(err => {
                 res.send(documents);
             })
     })
+    app.get('/getReviews', (req, res) => {
+        reviewCollection.find({})
+            .toArray((err, documents) => {
+                res.send(documents);
+            })
+    })
     app.get('/getService/:id', (req, res) => {
       
         serviceCollection.find({_id:ObjectID(req.params.id)})
             .toArray((err, result) => {
                 res.send(result[0]);
-                console.log(err)
-            })
-    })
-
-    app.get('/hiredServices', (req, res) => {
-        const email = req.body.email;
-        console.log(email)
-        adminCollection.find({ email: email })
-            .toArray((err, doctors) => {
-                if (doctors.length === 0) {
-                   hiredServiceCollection.find({email:email})
-                    .toArray((err, documents) => {
-                        res.send(documents);
-                    })
-                }else{
-                    hiredServiceCollection.find({})
-                    .toArray((err, documents) => {
-                        res.send(documents);
-                    })
-                }
                 
             })
     })
 
+    app.post('/hiredServices', (req, res) => {
+        const email = req.body.email;
+        console.log(email)
+     if(email){
+        adminCollection.find({email: email })
+        .toArray((err, doctors) => {
+
+            if (doctors.length === 0) {
+               hiredServiceCollection.find({email:email})
+                .toArray((err, documents) => {
+                    res.send(documents);
+                })
+            }else{
+                hiredServiceCollection.find({})
+                .toArray((err, documents) => {
+                    res.send(documents);
+                })
+            }
+        })
+     }
+    })
+
     app.post('/addService', (req, res) => {
         const file = req.files.file;
-       
         const name = req.body.name;
         const description = req.body.description;
+        const price = req.body.price
         const newImg = file.data;
         const encImg = newImg.toString('base64');
         var image = {
@@ -90,7 +99,7 @@ client.connect(err => {
             img: Buffer.from(encImg, 'base64')
         };
 
-        serviceCollection.insertOne({ name, description, image })
+        serviceCollection.insertOne({ name, description, image ,price})
             .then(result => {
                 res.send(result.insertedCount > 0);
             }).catch(err=>console.log(err))
@@ -98,8 +107,10 @@ client.connect(err => {
 
     app.post('/isAdmin', (req, res) => {
         const email = req.body.email;
+        console.log(email)
         adminCollection.find({email: email })
             .toArray((err, doctors) => {
+                console.log(doctors)
                 res.send(doctors.length > 0);
             })
     })
@@ -107,10 +118,17 @@ client.connect(err => {
         serviceCollection
           .deleteOne({ _id: ObjectID(req.params.id) })
           .then((result) => {
-              
             res.send(result.deletedCount > 0);
           });
       });
+      app.post('/addReview', (req, res) => {
+        const review = req.body;
+        reviewCollection.insertOne(review)
+            .then(result => {
+                res.send(result.insertedCount > 0)
+            })
+            .catch(err=>console.log(err))
+    });
 });
 
 
