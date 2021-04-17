@@ -73,7 +73,7 @@ client.connect(err => {
     });
     app.post('/addServiceStatus', (req, res) => {
         const status = req.body;
-        StatusCollection.insertOne(status)
+        statusCollection.insertOne(status)
             .then(result => {
                 res.send(result.insertedCount > 0)
             })
