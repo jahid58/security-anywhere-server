@@ -25,6 +25,7 @@ client.connect(err => {
     const adminCollection = client.db("securityServices").collection("admins");
     const hiredServiceCollection = client.db("securityServices").collection("hiredServices");
     const reviewCollection = client.db("securityServices").collection("reviews");
+    const statusCollection = client.db("securityServices").collection("serviceStatus");
 
     app.post('/addAdmin', (req, res) => {
         const admin = req.body;
@@ -34,6 +35,25 @@ client.connect(err => {
             })
             .catch(err=>console.log(err))
     });
+
+    app.post('/addService', (req, res) => {
+        const file = req.files.file;
+        const name = req.body.name;
+        const description = req.body.description;
+        const price = req.body.price
+        const newImg = file.data;
+        const encImg = newImg.toString('base64');
+        var image = {
+            contentType: file.mimetype,
+            size: file.size,
+            img: Buffer.from(encImg, 'base64')
+        };
+
+        serviceCollection.insertOne({ name, description, image ,price})
+            .then(result => {
+                res.send(result.insertedCount > 0);
+            }).catch(err=>console.log(err))
+    })
     app.post('/addHiredService', (req, res) => {
         const hiredService = req.body;
         hiredServiceCollection.insertOne(hiredService)
@@ -43,6 +63,28 @@ client.connect(err => {
             .catch(err=>console.log(err))
     });
 
+    app.post('/addReview', (req, res) => {
+        const review = req.body;
+        reviewCollection.insertOne(review)
+            .then(result => {
+                res.send(result.insertedCount > 0)
+            })
+            .catch(err=>console.log(err))
+    });
+    app.post('/addServiceStatus', (req, res) => {
+        const status = req.body;
+        StatusCollection.insertOne(status)
+            .then(result => {
+                res.send(result.insertedCount > 0)
+            })
+            .catch(err=>console.log(err))
+    });
+    app.get('/getServiceStatus', (req, res) => {
+        statusCollection.find({})
+            .toArray((err, documents) => {
+                res.send(documents);
+            })
+    })
     app.get('/getServices', (req, res) => {
         serviceCollection.find({})
             .toArray((err, documents) => {
@@ -86,24 +128,7 @@ client.connect(err => {
      }
     })
 
-    app.post('/addService', (req, res) => {
-        const file = req.files.file;
-        const name = req.body.name;
-        const description = req.body.description;
-        const price = req.body.price
-        const newImg = file.data;
-        const encImg = newImg.toString('base64');
-        var image = {
-            contentType: file.mimetype,
-            size: file.size,
-            img: Buffer.from(encImg, 'base64')
-        };
 
-        serviceCollection.insertOne({ name, description, image ,price})
-            .then(result => {
-                res.send(result.insertedCount > 0);
-            }).catch(err=>console.log(err))
-    })
 
     app.post('/isAdmin', (req, res) => {
         const email = req.body.email;
@@ -121,14 +146,7 @@ client.connect(err => {
             res.send(result.deletedCount > 0);
           });
       });
-      app.post('/addReview', (req, res) => {
-        const review = req.body;
-        reviewCollection.insertOne(review)
-            .then(result => {
-                res.send(result.insertedCount > 0)
-            })
-            .catch(err=>console.log(err))
-    });
+ 
 });
 
 
