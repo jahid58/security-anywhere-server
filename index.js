@@ -25,7 +25,7 @@ client.connect(err => {
     const adminCollection = client.db("securityServices").collection("admins");
     const hiredServiceCollection = client.db("securityServices").collection("hiredServices");
     const reviewCollection = client.db("securityServices").collection("reviews");
-    const statusCollection = client.db("securityServices").collection("serviceStatus");
+   
 
     app.post('/addAdmin', (req, res) => {
         const admin = req.body;
@@ -71,20 +71,14 @@ client.connect(err => {
             })
             .catch(err=>console.log(err))
     });
-    app.post('/addServiceStatus', (req, res) => {
-        const status = req.body;
-        statusCollection.insertOne(status)
-            .then(result => {
-                res.send(result.insertedCount > 0)
-            })
-            .catch(err=>console.log(err))
-    });
-    app.get('/getServiceStatus', (req, res) => {
-        statusCollection.find({})
-            .toArray((err, documents) => {
-                res.send(documents);
-            })
+    app.patch('/updateStatus/:id',(req,res)=>{
+         hiredServiceCollection.updateOne({id:req.params.id},
+           {
+             $set:{status:req.body.status}
+         }
+            )
     })
+    
     app.get('/getServices', (req, res) => {
         serviceCollection.find({})
             .toArray((err, documents) => {
